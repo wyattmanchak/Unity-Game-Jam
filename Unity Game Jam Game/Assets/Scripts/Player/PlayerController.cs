@@ -10,6 +10,7 @@ public class PlayerController : MonoBehaviour
     private InputAction horizontal;
     private InputAction jump;
     private InputAction timeButton;
+    private InputAction interact;
 
     [Header("Player Stats")]
     public float playerSpeed;
@@ -20,6 +21,10 @@ public class PlayerController : MonoBehaviour
 
     private float moveValue;
     private bool isFacingRight = true;
+
+    [Header("Hide stats")]
+    private bool isHiding;
+    private bool canHide;
 
     [Header("Buffer & Cyote Time")]
     private bool initiateJump;
@@ -53,6 +58,7 @@ public class PlayerController : MonoBehaviour
         horizontal = InputSystem.actions.FindAction("Move");
         jump = InputSystem.actions.FindAction("Jump");
         timeButton = InputSystem.actions.FindAction("TimeButton");
+        interact = InputSystem.actions.FindAction("Interact");
     }
 
 
@@ -63,6 +69,12 @@ public class PlayerController : MonoBehaviour
         Flip();
         CyoteTimeAndJumpBuffering();
         IncreaseFallSpeed();
+
+        float interactValue = interact.ReadValue<float>();
+        if (interactValue == 1 && canHide)
+        {
+            Hide();
+        }
     }
 
     private void FixedUpdate()
@@ -74,6 +86,11 @@ public class PlayerController : MonoBehaviour
             initiateJump = false;
             Jump();
         }
+    }
+
+    private void Hide()
+    {
+        isHiding = true;
     }
 
     private void Jump()
@@ -138,5 +155,20 @@ public class PlayerController : MonoBehaviour
     private bool isGrounded()
     {
         return Physics2D.OverlapCircle(groundCheck.position, 0.2f, groundLayer);
+    }
+
+    private void OnCollisionEnter2D(Collision2D collision)
+    {
+        if (collision.gameObject.tag == "HideableObject")
+        {
+            canHide = true;
+        }
+    }
+    private void OnCollisionExit2D(Collision2D collision)
+    {
+        if (collision.gameObject.tag == "HideableObject")
+        {
+            canHide = false;
+        }
     }
 }
