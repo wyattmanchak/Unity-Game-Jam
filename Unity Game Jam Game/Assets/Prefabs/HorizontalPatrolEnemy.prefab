@@ -216,7 +216,7 @@ MonoBehaviour:
   chaseSpeed: 7
   chaseRange: 10
   attackRange: 4
-  killRange: 3
+  killRange: 2
   canBeParried: 0
   groundCheck: {fileID: 3469669094809640793}
   wallCheck: {fileID: 501609808825940390}
