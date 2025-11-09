@@ -40,12 +40,12 @@ public class TextLerp : MonoBehaviour
         {
             float time = timeElapsed / fadeInDuration;
 
-            tmp.color = Color.Lerp(fullOpacity, noOpacity, time);
+            tmp.color = Color.Lerp(noOpacity, fullOpacity, time);
 
             timeElapsed += Time.deltaTime;
             yield return null;
         }
-        tmp.color = noOpacity;
+        tmp.color = fullOpacity;
 
         yield return new WaitForSeconds(duration);
 
@@ -59,11 +59,11 @@ public class TextLerp : MonoBehaviour
         {
             float time = secondarytimeElapsed / fadeInDuration;
 
-            tmp.color = Color.Lerp(noOpacity, fullOpacity, time);
+            tmp.color = Color.Lerp(fullOpacity, noOpacity, time);
 
             secondarytimeElapsed += Time.deltaTime;
             yield return null;
         }
-        tmp.color = fullOpacity;
+        tmp.color = noOpacity;
     }
 }

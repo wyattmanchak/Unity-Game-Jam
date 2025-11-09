@@ -1,5 +1,6 @@
+using System.Collections;
+using System.Collections.Generic;
 using UnityEngine;
-using static UnityEditor.Searcher.SearcherWindow.Alignment;
 using UnityEngine.InputSystem;
 
 public class EnemyPatrol : MonoBehaviour
@@ -18,6 +19,8 @@ public class EnemyPatrol : MonoBehaviour
     private bool isFacingRight = true;
 
     [Header("Refrences")]
+    //public AudioClip attackSound;
+
     private Rigidbody2D rb;
     private Animator anim;
     GameObject player;
@@ -135,6 +138,7 @@ public class EnemyPatrol : MonoBehaviour
 
     public void SetCanBeParried()
     {
+        //SoundManager.instance.PlaySound(attackSound, transform, .25f, true);
         canBeParried = true;
     }
 
