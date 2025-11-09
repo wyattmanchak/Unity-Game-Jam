@@ -37,7 +37,7 @@ public class EnemyPatrol : MonoBehaviour
     {
         float playerDistance = Vector3.Distance(player.transform.position, this.transform.position);
 
-        if (playerDistance < attackRange && !isAttacking && !player.GetComponent<PlayerController>().isHiding)
+        if (playerDistance < attackRange && !isAttacking && !player.GetComponent<PlayerController>().isHiding && canMoveForward())
         {
             Attack();
         }
@@ -77,7 +77,7 @@ public class EnemyPatrol : MonoBehaviour
 
     private bool canMoveForward()
     {
-        if (Physics2D.OverlapCircle(groundCheck.position, 0.2f, groundLayer) && !Physics2D.OverlapCircle(wallCheck.position, 0.2f, groundLayer))
+        if (Physics2D.OverlapCircle(groundCheck.position, 1f, groundLayer) && !Physics2D.OverlapCircle(wallCheck.position, 0.2f, groundLayer))
         {
             return true;
         }
