@@ -10,13 +10,16 @@ public class EnemyPatrol : MonoBehaviour
 
     public float chaseRange;
     public float attackRange;
+    public float killRange;
+
+    public bool canBeParried;
 
     private bool isAttacking;
-    private bool followingPlayer;
     private bool isFacingRight = true;
 
     [Header("Refrences")]
     private Rigidbody2D rb;
+    private Animator anim;
     GameObject player;
 
     [SerializeField] private Transform groundCheck;
@@ -26,6 +29,7 @@ public class EnemyPatrol : MonoBehaviour
     private void Awake()
     {
         rb = transform.GetComponent<Rigidbody2D>();
+        anim = transform.GetComponent<Animator>();
         player = GameObject.FindWithTag("Player");
     }
 
@@ -33,7 +37,7 @@ public class EnemyPatrol : MonoBehaviour
     {
         float playerDistance = Vector3.Distance(player.transform.position, this.transform.position);
 
-        if (playerDistance < attackRange && !isAttacking)
+        if (playerDistance < attackRange && !isAttacking && !player.GetComponent<PlayerController>().isHiding)
         {
             Attack();
         }
@@ -41,11 +45,7 @@ public class EnemyPatrol : MonoBehaviour
 
     private void FixedUpdate()
     {
-        if (followingPlayer && !isAttacking)
-        {
-            ChasePlayer();
-        }
-        else if (!followingPlayer && !isAttacking)
+        if (!isAttacking)
         {
             Patrol();
         }
@@ -54,6 +54,13 @@ public class EnemyPatrol : MonoBehaviour
     private void Attack()
     {
         isAttacking = true;
+
+        anim.SetTrigger("Attack");
+    }
+
+    private void EndAttack()
+    {
+        isAttacking = false;
     }
 
     private void Patrol()
@@ -63,18 +70,6 @@ public class EnemyPatrol : MonoBehaviour
             rb.linearVelocity = new Vector2(patrolSpeed, rb.linearVelocity.y);
         }
         else
-        {
-            Flip();
-        }
-    }
-
-    private void ChasePlayer()
-    {
-        if (canMoveForward() && playerInFront() && playerInRange())
-        {
-            rb.linearVelocity = new Vector2(chaseSpeed, rb.linearVelocity.y);
-        }
-        else if (!playerInFront())
         {
             Flip();
         }
@@ -136,5 +131,25 @@ public class EnemyPatrol : MonoBehaviour
         isFacingRight = !isFacingRight;
         localScale.x *= -1f;
         transform.localScale = localScale;
+    }
+
+    public void SetCanBeParried()
+    {
+        canBeParried = true;
+    }
+
+    public void SetCannotBeParried()
+    {
+        canBeParried = false;
+    }
+
+    public void KillPlayer()
+    {
+        float playerDistance = Vector3.Distance(player.transform.position, this.transform.position);
+
+        if (playerDistance <= killRange)
+        {
+            player.GetComponent<PlayerController>().Die();
+        }
     }
 }

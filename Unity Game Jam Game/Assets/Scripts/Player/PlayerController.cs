@@ -1,6 +1,10 @@
+using System.Collections;
+using System.Collections.Generic;
 using UnityEngine;
+using UnityEngine.SceneManagement;
 using UnityEngine.InputSystem;
 using static UnityEditor.Searcher.SearcherWindow.Alignment;
+using UnityEngine.UIElements;
 
 public class PlayerController : MonoBehaviour
 {
@@ -18,13 +22,21 @@ public class PlayerController : MonoBehaviour
     public float groundCheckDistance;
     public float extraFallSpeed;
     public float maxFallSpeed;
+    public float timeFreezeDuration;
+    public float parryRange;
+    public float parryCooldownTime;
+    public float timeFreezeAmount;
+
+    private bool canParry = true;
+    private bool cannotDie;
 
     private float moveValue;
     private bool isFacingRight = true;
 
     [Header("Hide stats")]
-    private bool isHiding;
+    public bool isHiding;
     private bool canHide;
+    private bool canInteract;
 
     [Header("Buffer & Cyote Time")]
     private bool initiateJump;
@@ -36,8 +48,15 @@ public class PlayerController : MonoBehaviour
     private float jumpBufferCounter;
 
     [Header("Refrences")]
+    private GameObject[] enemies;
+    public GameObject[] children;
 
+    public GameObject particles;
+    public GameObject backGround;
+    public GameObject hideObject;
     private Rigidbody2D rb;
+    private SpriteRenderer spriteRenderer;
+    private BoxCollider2D boxCollider;
 
     [SerializeField] private Transform groundCheck;
     [SerializeField] private LayerMask groundLayer;
@@ -54,6 +73,8 @@ public class PlayerController : MonoBehaviour
     private void Awake()
     {
         rb = transform.GetComponent<Rigidbody2D>();
+        spriteRenderer = transform.GetComponent<SpriteRenderer>();
+        boxCollider = transform.GetComponent<BoxCollider2D>();
 
         horizontal = InputSystem.actions.FindAction("Move");
         jump = InputSystem.actions.FindAction("Jump");
@@ -61,19 +82,40 @@ public class PlayerController : MonoBehaviour
         interact = InputSystem.actions.FindAction("Interact");
     }
 
+    private void Start()
+    {
+        enemies = GameObject.FindGameObjectsWithTag("Enemy");
+    }
+
 
     private void Update()
     {
-        moveValue = horizontal.ReadValue<Vector2>().x;
-
-        Flip();
-        CyoteTimeAndJumpBuffering();
-        IncreaseFallSpeed();
-
         float interactValue = interact.ReadValue<float>();
-        if (interactValue == 1 && canHide)
+        if (!isHiding)
         {
-            Hide();
+            moveValue = horizontal.ReadValue<Vector2>().x;
+
+            ParryCheck();
+            Flip();
+            CyoteTimeAndJumpBuffering();
+            IncreaseFallSpeed();
+
+            if (interactValue == 1 && canHide && canInteract)
+            {
+                Hide();
+            }
+        }
+        else
+        {
+            if (interactValue == 1 && canInteract)
+            {
+                UnHide();
+            }
+        }
+        
+        if (interactValue == 0)
+        {
+            canInteract = true;
         }
     }
 
@@ -90,12 +132,90 @@ public class PlayerController : MonoBehaviour
 
     private void Hide()
     {
+        foreach (GameObject child in children)
+        {
+            child.SetActive(false);
+        }
+
+        canInteract = false;
         isHiding = true;
+        spriteRenderer.enabled = false;
+        boxCollider.enabled = false;
+        rb.constraints = RigidbodyConstraints2D.FreezePositionX | RigidbodyConstraints2D.FreezePositionY;
+
+        hideObject.GetComponent<HidObject>().Hide();
+    }
+
+    private void UnHide()
+    {
+        foreach (GameObject child in children)
+        {
+            child.SetActive(true);
+        }
+
+        canInteract = false;
+        isHiding = false;
+        spriteRenderer.enabled = true;
+        boxCollider.enabled = true;
+        rb.constraints = RigidbodyConstraints2D.FreezeRotation;
+
+        hideObject.GetComponent<HidObject>().UnHide();
     }
 
     private void Jump()
     {
         rb.AddForce(transform.up * jumpStrength, ForceMode2D.Impulse);
+    }
+
+    private void ParryCheck()
+    {
+        float timeValue = timeButton.ReadValue<float>();
+        if (timeValue == 1 && canParry)
+        {
+            GameObject enemy = FindClosestEnemy();
+            float enemyCheckDistance = Mathf.Abs(this.transform.position.x - enemy.transform.position.x);
+
+            ParryCooldown();
+
+            if (enemy.GetComponent<EnemyPatrol>().canBeParried && enemyCheckDistance <= parryRange && canParry)
+            {
+                StartCoroutine(Parried());
+            }
+        }
+    }
+
+    IEnumerator Parried()
+    {
+        cannotDie = true;
+
+        backGround.GetComponent<LerpBackground>().LerpOpacity(timeFreezeDuration);
+        var ps = particles.GetComponent<ParticleSystem>();
+        var main = ps.main;
+        main.simulationSpeed = 0.1f;
+
+        foreach (GameObject enemy in enemies)
+        {
+            enemy.GetComponent<Animator>().speed = timeFreezeAmount;
+            enemy.GetComponent<Rigidbody2D>().linearVelocity = new Vector2(0, 0);
+        }
+
+        yield return new WaitForSeconds(timeFreezeDuration);
+
+        foreach (GameObject enemy in enemies)
+        {
+            enemy.GetComponent<Animator>().speed = 1;
+        }
+
+        main.simulationSpeed = 1f;
+
+        cannotDie = false;
+    }
+
+    IEnumerator ParryCooldown()
+    {
+        canParry = false;
+        yield return new WaitForSeconds(parryCooldownTime);
+        canParry = true;
     }
 
     private void Flip()
@@ -157,18 +277,47 @@ public class PlayerController : MonoBehaviour
         return Physics2D.OverlapCircle(groundCheck.position, 0.2f, groundLayer);
     }
 
-    private void OnCollisionEnter2D(Collision2D collision)
+    void OnTriggerEnter2D(Collider2D collision)
     {
         if (collision.gameObject.tag == "HideableObject")
         {
+            hideObject = collision.gameObject;
             canHide = true;
         }
     }
-    private void OnCollisionExit2D(Collision2D collision)
+    void OnTriggerExit2D(Collider2D collision)
     {
         if (collision.gameObject.tag == "HideableObject")
         {
             canHide = false;
+        }
+    }
+
+    public GameObject FindClosestEnemy()
+    {
+        GameObject closest = null;
+        float distance = Mathf.Infinity;
+        Vector3 position = transform.position;
+        foreach (GameObject go in enemies)
+        {
+            Vector3 diff = go.transform.position - position;
+            float curDistance = diff.sqrMagnitude;
+            if (curDistance < distance)
+            {
+                closest = go;
+                distance = curDistance;
+            }
+        }
+        return closest;
+    }
+
+    public void Die()
+    {
+        if (!cannotDie)
+        {
+            Scene currentScene = SceneManager.GetActiveScene();
+            int sceneBuildIndex = currentScene.buildIndex;
+            SceneManager.LoadScene(sceneBuildIndex);
         }
     }
 }
