@@ -430,7 +430,7 @@ MonoBehaviour:
   extraFallSpeed: 1.01
   maxFallSpeed: -30
   timeFreezeDuration: 3
-  parryRange: 4
+  parryRange: 6
   parryCooldownTime: 1
   timeFreezeAmount: 0.05
   isHiding: 0

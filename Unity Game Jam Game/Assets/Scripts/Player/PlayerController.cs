@@ -27,7 +27,7 @@ public class PlayerController : MonoBehaviour
     public float parryCooldownTime;
     public float timeFreezeAmount;
 
-    private bool canParry = true;
+    public bool canParry = true;
     private bool cannotDie;
 
     private float moveValue;

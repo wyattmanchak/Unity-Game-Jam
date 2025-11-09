@@ -605,14 +605,14 @@ AnimationClip:
     floatParameter: 0
     intParameter: 0
     messageOptions: 0
-  - time: 0.53333336
+  - time: 0.5833333
     functionName: SetCannotBeParried
     data: 
     objectReferenceParameter: {fileID: 0}
     floatParameter: 0
     intParameter: 0
     messageOptions: 0
-  - time: 0.55
+  - time: 0.6666667
     functionName: KillPlayer
     data: 
     objectReferenceParameter: {fileID: 0}
