@@ -598,21 +598,21 @@ AnimationClip:
   m_HasGenericRootTransform: 0
   m_HasMotionFloatCurves: 0
   m_Events:
-  - time: 0.35
+  - time: 0.3
     functionName: SetCanBeParried
     data: 
     objectReferenceParameter: {fileID: 0}
     floatParameter: 0
     intParameter: 0
     messageOptions: 0
-  - time: 0.48333332
+  - time: 0.53333336
     functionName: SetCannotBeParried
     data: 
     objectReferenceParameter: {fileID: 0}
     floatParameter: 0
     intParameter: 0
     messageOptions: 0
-  - time: 0.5
+  - time: 0.55
     functionName: KillPlayer
     data: 
     objectReferenceParameter: {fileID: 0}
