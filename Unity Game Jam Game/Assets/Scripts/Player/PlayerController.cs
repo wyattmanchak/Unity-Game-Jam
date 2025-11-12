@@ -3,7 +3,6 @@ using System.Collections.Generic;
 using UnityEngine;
 using UnityEngine.SceneManagement;
 using UnityEngine.InputSystem;
-using static UnityEditor.Searcher.SearcherWindow.Alignment;
 using UnityEngine.UIElements;
 
 public class PlayerController : MonoBehaviour
@@ -27,7 +26,7 @@ public class PlayerController : MonoBehaviour
     public float parryCooldownTime;
     public float timeFreezeAmount;
 
-    private bool canParry = true;
+    public bool canParry = true;
     private bool cannotDie;
 
     private float moveValue;
@@ -58,6 +57,8 @@ public class PlayerController : MonoBehaviour
     private SpriteRenderer spriteRenderer;
     private BoxCollider2D boxCollider;
 
+    private Animator anim;
+
     [SerializeField] private Transform groundCheck;
     [SerializeField] private LayerMask groundLayer;
 
@@ -72,6 +73,7 @@ public class PlayerController : MonoBehaviour
 
     private void Awake()
     {
+        anim = GetComponent<Animator>();
         rb = transform.GetComponent<Rigidbody2D>();
         spriteRenderer = transform.GetComponent<SpriteRenderer>();
         boxCollider = transform.GetComponent<BoxCollider2D>();
@@ -94,6 +96,15 @@ public class PlayerController : MonoBehaviour
         if (!isHiding)
         {
             moveValue = horizontal.ReadValue<Vector2>().x;
+
+            if (moveValue > 0.1f || moveValue < -0.1f)
+            {
+                anim.SetBool("Running", true);
+            }
+            else
+            {
+                anim.SetBool("Running", false);
+            }
 
             ParryCheck();
             Flip();
@@ -175,12 +186,14 @@ public class PlayerController : MonoBehaviour
             GameObject enemy = FindClosestEnemy();
             float enemyCheckDistance = Mathf.Abs(this.transform.position.x - enemy.transform.position.x);
 
-            ParryCooldown();
+            anim.SetTrigger("Parry");
 
             if (enemy.GetComponent<EnemyPatrol>().canBeParried && enemyCheckDistance <= parryRange && canParry)
             {
                 StartCoroutine(Parried());
             }
+
+            StartCoroutine(ParryCooldown());
         }
     }
 
@@ -197,6 +210,7 @@ public class PlayerController : MonoBehaviour
         {
             enemy.GetComponent<Animator>().speed = timeFreezeAmount;
             enemy.GetComponent<Rigidbody2D>().linearVelocity = new Vector2(0, 0);
+            Physics2D.IgnoreCollision(this.boxCollider, enemy.GetComponent<BoxCollider2D>(), true);
         }
 
         yield return new WaitForSeconds(timeFreezeDuration);
@@ -204,6 +218,7 @@ public class PlayerController : MonoBehaviour
         foreach (GameObject enemy in enemies)
         {
             enemy.GetComponent<Animator>().speed = 1;
+            Physics2D.IgnoreCollision(this.boxCollider, enemy.GetComponent<BoxCollider2D>(), false);
         }
 
         main.simulationSpeed = 1f;
@@ -233,10 +248,12 @@ public class PlayerController : MonoBehaviour
     {
         if (isGrounded())
         {
+            anim.SetBool("Jumping", false);
             cyoteTimeCounter = cyoteTime;
         }
         else
         {
+            anim.SetBool("Jumping", true);
             cyoteTimeCounter -= Time.deltaTime;
         }
 

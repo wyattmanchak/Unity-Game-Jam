@@ -1,5 +1,6 @@
+using System.Collections;
+using System.Collections.Generic;
 using UnityEngine;
-using static UnityEditor.Searcher.SearcherWindow.Alignment;
 using UnityEngine.InputSystem;
 
 public class EnemyPatrol : MonoBehaviour
@@ -18,6 +19,8 @@ public class EnemyPatrol : MonoBehaviour
     private bool isFacingRight = true;
 
     [Header("Refrences")]
+    //public AudioClip attackSound;
+
     private Rigidbody2D rb;
     private Animator anim;
     GameObject player;
@@ -37,7 +40,7 @@ public class EnemyPatrol : MonoBehaviour
     {
         float playerDistance = Vector3.Distance(player.transform.position, this.transform.position);
 
-        if (playerDistance < attackRange && !isAttacking && !player.GetComponent<PlayerController>().isHiding)
+        if (playerDistance < attackRange && !isAttacking && !player.GetComponent<PlayerController>().isHiding && canMoveForward())
         {
             Attack();
         }
@@ -77,7 +80,7 @@ public class EnemyPatrol : MonoBehaviour
 
     private bool canMoveForward()
     {
-        if (Physics2D.OverlapCircle(groundCheck.position, 0.2f, groundLayer) && !Physics2D.OverlapCircle(wallCheck.position, 0.2f, groundLayer))
+        if (Physics2D.OverlapCircle(groundCheck.position, 1f, groundLayer) && !Physics2D.OverlapCircle(wallCheck.position, 0.2f, groundLayer))
         {
             return true;
         }
@@ -135,6 +138,7 @@ public class EnemyPatrol : MonoBehaviour
 
     public void SetCanBeParried()
     {
+        //SoundManager.instance.PlaySound(attackSound, transform, .25f, true);
         canBeParried = true;
     }
 
